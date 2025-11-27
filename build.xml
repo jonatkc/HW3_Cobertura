@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="HW3_Test_and_Code_Coverage" default="report" basedir=".">
+
+    <!-- ==== PROPERTY DEFINITIONS ==== -->
+    <property name="src.dir" location="."/>
+    <property name="build.dir" location="build"/>
+    <property name="instrumented.dir" location="instrumented"/>
+    <property name="report.dir" location="cobertura-report"/>
+    <property name="cobertura.jar" location="/home/${user.name}/tools/cobertura/cobertura-2.1.1.jar"/>
+    <property name="cobertura.lib" location="/home/${user.name}/tools/cobertura/lib"/>
+
+    <!-- ==== CREATE DIRECTORIES ==== -->
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${instrumented.dir}"/>
+        <mkdir dir="${report.dir}"/>
+    </target>
+
+    <!-- ==== COMPILE JAVA SOURCES ==== -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false" source="8" target="8">
+            <classpath>
+                <fileset dir="${cobertura.lib}" includes="*.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <!-- ==== INSTRUMENT CLASSES WITH COBERTURA ==== -->
+    <target name="instrument" depends="compile">
+        <java classname="net.sourceforge.cobertura.instrument.InstrumentMain" fork="true" failonerror="true">
+    <classpath>
+        <pathelement location="${cobertura.jar}"/>
+        <fileset dir="${cobertura.lib}" includes="*.jar"/>
+    </classpath>
+    <arg value="--destination"/>
+    <arg value="${instrumented.dir}"/>
+    <!-- list each class you want to instrument -->
+    <arg value="${build.dir}/vendingMachine.class"/>
+    <arg value="${build.dir}/test_coin.class"/>
+    <arg value="${build.dir}/test_choco.class"/>
+</java>
+
+    </target>
+
+    <!-- ==== RUN INSTRUMENTED TESTS ==== -->
+    <target name="test" depends="instrument">
+        <!-- Run test_coin -->
+        <java classname="test_coin" fork="true" failonerror="true">
+            <classpath>
+                <pathelement location="${instrumented.dir}"/>
+                <pathelement location="${cobertura.jar}"/>
+                <fileset dir="${cobertura.lib}" includes="*.jar"/>
+            </classpath>
+        </java>
+
+        <!-- Run test_choco -->
+        <java classname="test_choco" fork="true" failonerror="true">
+            <classpath>
+                <pathelement location="${instrumented.dir}"/>
+                <pathelement location="${cobertura.jar}"/>
+                <fileset dir="${cobertura.lib}" includes="*.jar"/>
+            </classpath>
+        </java>
+    </target>
+
+    <!-- ==== GENERATE COBERTURA REPORT ==== -->
+    <target name="report" depends="test">
+        <java classname="net.sourceforge.cobertura.reporting.Main" fork="true" failonerror="true">
+            <classpath>
+                <pathelement location="${cobertura.jar}"/>
+                <fileset dir="${cobertura.lib}" includes="*.jar"/>
+            </classpath>
+            <arg value="--format"/>
+            <arg value="html"/>
+            <arg value="--datafile"/>
+            <arg value="cobertura.ser"/>
+            <arg value="--destination"/>
+            <arg value="${report.dir}"/>
+        </java>
+    </target>
+
+</project>
+
